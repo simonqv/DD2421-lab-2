@@ -16,22 +16,19 @@ targets = np.concatenate((
     -np.ones(classB.shape[0])
 ))
 
-
 N = inputs.shape[0]  # Number of rows (samples)
 permute = list(range(N))
 random.shuffle(permute)
 inputs = inputs[permute, :]
 targets = targets[permute]
 
-
 C = 10
 bounds = [(0, C) for _ in range(N)]
 start = np.zeros(N)
 
 
-
 def linear_kernel(x, y):
-    return np.dot(x.T, y)
+    return np.dot(x, y)
 
 
 TK_MATRIX = np.array(
@@ -52,13 +49,32 @@ def zerofun(a):
 ret = minimize(objective, start, bounds=bounds, constraints={'type': 'eq', 'fun': zerofun})
 alpha = ret['x']
 
-
 b_alpha = np.abs(alpha) > 1e-5
 
 nonzero_alpha = alpha[b_alpha]
-suport_vector = inputs[b_alpha, :]
+support_vector = inputs[b_alpha, :][0]
 
-# b = ...
+
+def calcB():
+    s = 0
+    for i in range(N):
+        s += alpha[i] * targets[i] * linear_kernel(support_vector, inputs[i])
+
+    s -= targets[b_alpha][0]
+    return s
+
+
+b = calcB()
+
+
+def indicator(x, y):
+    s = 0
+    for i in range(N):
+        s += alpha[i] * targets[i] * linear_kernel(np.array([x, y]), inputs[i])
+
+    s -= b
+    return s
+
 
 plt.plot([p[0] for p in classA],
          [p[1] for p in classA],
@@ -70,4 +86,16 @@ plt.plot([p[0] for p in classB],
 
 plt.axis('equal')
 # plt.savefig('svmplot.pdf')
+
+
+xgrid = np.linspace(-5, 5)
+ygrid = np.linspace(-4, 4)
+grid = np.array([[indicator(x, y)
+                  for x in xgrid]
+                 for y in ygrid])
+plt.contour(xgrid, ygrid, grid,
+            (-1.0, 0.0, 1.0),
+            colors=('red', 'black', 'blue'),
+            linewidths=(1, 3, 1))
+
 plt.show()
