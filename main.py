@@ -31,8 +31,20 @@ def linear_kernel(x, y):
     return np.dot(x, y)
 
 
+def poly_kernel(x, y):
+    return (np.dot(x, y) + 1)**8
+
+
+def radial_kernel(x, y):
+    sig = 2
+
+    return np.exp(-(np.linalg.norm(x - y)**2) / (2 * sig**2))
+
+
+KERNEL_FUNC = radial_kernel
+
 TK_MATRIX = np.array(
-    [[targets[i] * targets[j] * linear_kernel(inputs[i], inputs[j]) for j in range(N)] for i in range(N)])
+    [[targets[i] * targets[j] * KERNEL_FUNC(inputs[i], inputs[j]) for j in range(N)] for i in range(N)])
 
 
 def objective(a):
@@ -58,7 +70,7 @@ support_vector = inputs[b_alpha, :][0]
 def calcB():
     s = 0
     for i in range(N):
-        s += alpha[i] * targets[i] * linear_kernel(support_vector, inputs[i])
+        s += alpha[i] * targets[i] * KERNEL_FUNC(support_vector, inputs[i])
 
     s -= targets[b_alpha][0]
     return s
@@ -70,7 +82,7 @@ b = calcB()
 def indicator(x, y):
     s = 0
     for i in range(N):
-        s += alpha[i] * targets[i] * linear_kernel(np.array([x, y]), inputs[i])
+        s += alpha[i] * targets[i] * KERNEL_FUNC(np.array([x, y]), inputs[i])
 
     s -= b
     return s
@@ -85,7 +97,6 @@ plt.plot([p[0] for p in classB],
          'r.')
 
 plt.axis('equal')
-# plt.savefig('svmplot.pdf')
 
 
 xgrid = np.linspace(-5, 5)
@@ -98,4 +109,6 @@ plt.contour(xgrid, ygrid, grid,
             colors=('red', 'black', 'blue'),
             linewidths=(1, 3, 1))
 
+plt.savefig('svmplot.pdf')
 plt.show()
+
