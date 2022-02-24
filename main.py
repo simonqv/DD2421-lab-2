@@ -4,11 +4,11 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 
 classA = np.concatenate((
-    np.random.randn(10, 2) * 0.2 + [1.5, 0.5],
-    np.random.randn(10, 2) * 0.2 + [-1.5, 0.5]
+    np.random.randn(10, 2) * 0.2 + [2.5, 0.5],
+    np.random.randn(10, 2) * 0.2 + [-2.5, 0.5]
 ))
 
-classB = np.random.randn(20, 2) * 0.2 + [0.0, -0.5]
+classB = np.random.randn(20, 2) * 0.2 + [0.0, 0.5]
 
 inputs = np.concatenate((classA, classB))
 targets = np.concatenate((
@@ -22,7 +22,7 @@ random.shuffle(permute)
 inputs = inputs[permute, :]
 targets = targets[permute]
 
-C = 10
+C = 1e15
 bounds = [(0, C) for _ in range(N)]
 start = np.zeros(N)
 
@@ -32,16 +32,17 @@ def linear_kernel(x, y):
 
 
 def poly_kernel(x, y):
-    return (np.dot(x, y) + 1)**8
+    p = 2
+    return (np.dot(x, y) + 1)**p
 
 
 def radial_kernel(x, y):
-    sig = 2
-
+    sig = 10
     return np.exp(-(np.linalg.norm(x - y)**2) / (2 * sig**2))
 
 
-KERNEL_FUNC = radial_kernel
+KERNEL_FUNC = poly_kernel
+
 
 TK_MATRIX = np.array(
     [[targets[i] * targets[j] * KERNEL_FUNC(inputs[i], inputs[j]) for j in range(N)] for i in range(N)])
@@ -65,6 +66,7 @@ b_alpha = np.abs(alpha) > 1e-5
 
 nonzero_alpha = alpha[b_alpha]
 support_vector = inputs[b_alpha, :][0]
+print(support_vector)
 
 
 def calcB():
@@ -108,6 +110,8 @@ plt.contour(xgrid, ygrid, grid,
             (-1.0, 0.0, 1.0),
             colors=('red', 'black', 'blue'),
             linewidths=(1, 3, 1))
+
+#plt.plot([support_vector[0]], [support_vector[1]], "x")
 
 plt.savefig('svmplot.pdf')
 plt.show()
